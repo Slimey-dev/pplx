@@ -34,8 +34,7 @@ fn ai_request(input: &str) -> String {
     let payload = format!(
         r#"{{
         "model":"pplx-7b-chat",
-        "messages":[{{"role":"system","content":"Be precise and concise."}}],
-        "messages": [{{"role": "user", "content": "{}"}}],
+        "messages":[{{"role":"system","content":"Be precise and concise."}}, {{"role": "user", "content": "{}"}}],
         "max_tokens":0,
         "temperature":1,
         "top_p":1,
