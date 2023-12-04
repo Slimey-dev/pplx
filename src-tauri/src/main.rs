@@ -2,7 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use curl::easy::{Easy, List};
+use lazy_static::lazy_static;
 use serde_json;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 fn main() {
     tauri::Builder::default()
@@ -15,6 +18,10 @@ fn main() {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
+}
+
+lazy_static! {
+    static ref CHAT_HISTORY: Mutex<Vec<HashMap<&'static str, String>>> = Mutex::new(Vec::new());
 }
 
 #[tauri::command]
@@ -31,10 +38,26 @@ fn ai_request(input: &str) -> String {
         .unwrap();
     easy.http_headers(list).unwrap();
 
+    {
+        let mut chat_history = CHAT_HISTORY.lock().unwrap();
+        let new_message = input.to_string();
+
+        let mut new_msg_map: HashMap<&'static str, String> = HashMap::new();
+        new_msg_map.insert("role", "user".to_string());
+        new_msg_map.insert("content", new_message);
+
+        chat_history.push(new_msg_map);
+    }
+
+    let chat_history_json = {
+        let chat_history = CHAT_HISTORY.lock().unwrap();
+        serde_json::to_string(&(*chat_history)).unwrap()
+    };
+
     let payload = format!(
         r#"{{
         "model":"pplx-7b-chat",
-        "messages":[{{"role":"system","content":"Be precise and concise."}}, {{"role": "user", "content": "{}"}}],
+        "messages":{},
         "max_tokens":0,
         "temperature":1,
         "top_p":1,
@@ -42,7 +65,7 @@ fn ai_request(input: &str) -> String {
         "stream":false,
         "presence_penalty":0,
         "frequency_penalty":1}}"#,
-        input
+        chat_history_json
     );
 
     easy.post_fields_copy(payload.as_bytes()).unwrap();
@@ -63,5 +86,16 @@ fn ai_request(input: &str) -> String {
     let message = json["choices"][0]["message"]["content"]
         .as_str()
         .unwrap_or("");
+
+    {
+        let mut chat_history = CHAT_HISTORY.lock().unwrap();
+
+        let mut assistant_msg_map: HashMap<&'static str, String> = HashMap::new();
+        assistant_msg_map.insert("role", "assistant".to_string());
+        assistant_msg_map.insert("content", message.to_string());
+
+        chat_history.push(assistant_msg_map);
+    }
+
     message.to_string()
 }
