@@ -12,9 +12,32 @@
 </script>
 
 {#each apiResponses as response (response.message)}
-	<pre class:is-user={response.isUser}>{response.message}</pre>
+	<pre
+		class:is-user={response.isUser}
+		class:user-message={response.isUser}
+		class:ai-message={!response.isUser}>{response.message}</pre>
 {/each}
 
 <input bind:value={inputText} placeholder="Enter your input here" />
 
 <button on:click={callAiRequest}> Call AI Request </button>
+
+<style>
+	.user-message {
+		text-align: right;
+		background-color: #d1e7dd; /* light green */
+		color: black;
+		margin: 10px;
+		padding: 10px;
+		border-radius: 10px;
+	}
+
+	.ai-message {
+		text-align: left;
+		background-color: #d3d3d3; /* light gray */
+		color: black;
+		margin: 10px;
+		padding: 10px;
+		border-radius: 10px;
+	}
+</style>
