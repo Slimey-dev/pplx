@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
+	import rust from 'highlight.js/lib/languages/rust';
+	import typescript from 'highlight.js/lib/languages/typescript';
+	import 'highlight.js/styles/github.css';
+	import rehypeHighlight from 'rehype-highlight';
+	import type { Plugin } from 'svelte-exmarkdown';
+	import Markdown from 'svelte-exmarkdown';
 
 	let inputText = '';
 	let apiResponses: { message: string; isUser: boolean }[] = [];
@@ -9,20 +15,36 @@
 		const result = await invoke('ai_request', { input: inputText });
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 	}
+
+	const plugins: Plugin[] = [
+		{
+			rehypePlugin: [rehypeHighlight, { ignoreMissing: true, languages: { typescript, rust } }]
+		}
+	];
 </script>
 
-{#each apiResponses as response (response.message)}
-	<pre
-		class:is-user={response.isUser}
-		class:user-message={response.isUser}
-		class:ai-message={!response.isUser}>{response.message}</pre>
-{/each}
+<div class="message-container">
+	{#each apiResponses as response (response.message)}
+		<div
+			class:is-user={response.isUser}
+			class:user-message={response.isUser}
+			class:ai-message={!response.isUser}
+		>
+			<Markdown {plugins} md={response.message} />
+		</div>
+	{/each}
+</div>
 
 <input bind:value={inputText} placeholder="Enter your input here" />
 
 <button on:click={callAiRequest}> Call AI Request </button>
 
 <style>
+	.message-container {
+		max-height: 100%; /* adjust as needed */
+		overflow-y: auto;
+	}
+
 	.user-message {
 		text-align: right;
 		background-color: #d1e7dd; /* light green */

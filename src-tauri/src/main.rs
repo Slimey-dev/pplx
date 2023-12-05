@@ -40,6 +40,16 @@ fn ai_request(input: &str) -> String {
 
     {
         let mut chat_history = CHAT_HISTORY.lock().unwrap();
+        if chat_history.is_empty() {
+            let mut system_msg_map: HashMap<&'static str, String> = HashMap::new();
+            system_msg_map.insert("role", "system".to_string());
+            system_msg_map.insert(
+                "content",
+                "Be precise and concise. Write your messages in markdown. Write codeblocks in markdown.".to_string(),
+            );
+            chat_history.push(system_msg_map);
+        }
+
         let new_message = input.to_string();
 
         let mut new_msg_map: HashMap<&'static str, String> = HashMap::new();
@@ -68,6 +78,8 @@ fn ai_request(input: &str) -> String {
         chat_history_json
     );
 
+    println!("Payload: {}", payload);
+
     easy.post_fields_copy(payload.as_bytes()).unwrap();
 
     let mut data = Vec::new();
@@ -83,6 +95,7 @@ fn ai_request(input: &str) -> String {
     }
 
     let json: serde_json::Value = serde_json::from_slice(&data).unwrap();
+    print!("{:?}", json);
     let message = json["choices"][0]["message"]["content"]
         .as_str()
         .unwrap_or("");
