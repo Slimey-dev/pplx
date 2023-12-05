@@ -1,16 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use curl::easy::{Easy, List};
 use lazy_static::lazy_static;
-use serde_json;
+use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use serde_json::{self, json};
 use std::collections::HashMap;
 use std::sync::Mutex;
 
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet])
-        .invoke_handler(tauri::generate_handler![ai_request])
+        .invoke_handler(tauri::generate_handler![async_command])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -20,23 +20,22 @@ fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
 }
 
+#[tauri::command]
+fn async_command(input: &str) -> Result<String, String> {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let result = runtime.block_on(async {
+        let result = ai_request(&input).await;
+        result
+    });
+    result
+}
+
 lazy_static! {
     static ref CHAT_HISTORY: Mutex<Vec<HashMap<&'static str, String>>> = Mutex::new(Vec::new());
 }
 
-#[tauri::command]
-fn ai_request(input: &str) -> String {
-    let mut easy = Easy::new();
-    easy.url("https://api.perplexity.ai/chat/completions")
-        .unwrap();
-    easy.post(true).unwrap();
-
-    let mut list = List::new();
-    list.append("accept: application/json").unwrap();
-    list.append("content-type: application/json").unwrap();
-    list.append("authorization: Bearer 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")
-        .unwrap();
-    easy.http_headers(list).unwrap();
+async fn ai_request(input: &str) -> Result<String, String> {
+    let client = reqwest::Client::new();
 
     {
         let mut chat_history = CHAT_HISTORY.lock().unwrap();
@@ -64,38 +63,56 @@ fn ai_request(input: &str) -> String {
         serde_json::to_string(&(*chat_history)).unwrap()
     };
 
-    let payload = format!(
-        r#"{{
-        "model":"pplx-7b-chat",
-        "messages":{},
-        "max_tokens":0,
-        "temperature":1,
-        "top_p":1,
-        "top_k":0,
-        "stream":false,
-        "presence_penalty":0,
-        "frequency_penalty":1}}"#,
-        chat_history_json
-    );
+    let messages: Vec<serde_json::Value> = serde_json::from_str(&chat_history_json).unwrap();
 
-    println!("Payload: {}", payload);
+    let payload = json!({
+        "model": "pplx-7b-chat",
+        "messages": messages,
+        "max_tokens": 0,
+        "temperature": 1,
+        "top_p": 1,
+        "top_k": 0,
+        "stream": false,
+        "presence_penalty": 0,
+        "frequency_penalty": 1
+    });
 
-    easy.post_fields_copy(payload.as_bytes()).unwrap();
+    println!("Sending request...");
 
-    let mut data = Vec::new();
-    {
-        let mut transfer = easy.transfer();
-        transfer
-            .write_function(|new_data| {
-                data.extend_from_slice(new_data);
-                Ok(new_data.len())
-            })
-            .unwrap();
-        transfer.perform().unwrap();
-    }
+    let send_res = client
+        .post("https://api.perplexity.ai/chat/completions")
+        .header(ACCEPT, "application/json")
+        .header(CONTENT_TYPE, "application/json")
+        .header(
+            AUTHORIZATION,
+            "Bearer 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",
+        )
+        .body(payload.to_string())
+        .send()
+        .await;
 
-    let json: serde_json::Value = serde_json::from_slice(&data).unwrap();
-    print!("{:?}", json);
+    println!("Request sent. Processing response...");
+
+    let res = match send_res {
+        Ok(val) => {
+            println!("Response received.");
+            val
+        }
+        Err(err) => {
+            println!("Error sending request: {}", err);
+            return Err(err.to_string());
+        }
+    };
+
+    let json_res: Result<serde_json::Value, _> = res.json().await;
+    let json = match json_res {
+        Ok(val) => {
+            println!("JSON response: {}", val.to_string());
+            val
+        }
+        Err(err) => return Err(err.to_string()),
+    };
+
     let message = json["choices"][0]["message"]["content"]
         .as_str()
         .unwrap_or("");
@@ -110,5 +127,5 @@ fn ai_request(input: &str) -> String {
         chat_history.push(assistant_msg_map);
     }
 
-    message.to_string()
+    Ok(message.to_string())
 }

@@ -12,7 +12,7 @@
 
 	async function callAiRequest(): Promise<void> {
 		apiResponses = [...apiResponses, { message: inputText, isUser: true }];
-		const result = await invoke('ai_request', { input: inputText });
+		const result = await invoke('async_command', { input: inputText });
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 	}
 
