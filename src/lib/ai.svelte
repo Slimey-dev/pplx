@@ -23,43 +23,35 @@
 	];
 </script>
 
-<div class="message-container">
-	{#each apiResponses as response (response.message)}
-		<div
-			class:is-user={response.isUser}
-			class:user-message={response.isUser}
-			class:ai-message={!response.isUser}
-		>
-			<Markdown {plugins} md={response.message} />
+<div class="h-full">
+	<div class="w-full mt-10 overflow-y-auto mb-20">
+		{#each apiResponses as response (response.message)}
+			<div class="mx-20 flex justify-{response.isUser ? 'end' : 'start'} m-2">
+				<div
+					class:is-user={response.isUser}
+					class={response.isUser
+						? 'text-right bg-blue-500 text-white p-4 max-w-[90%] rounded-lg'
+						: 'text-left  bg-gray-300 text-black p-4 max-w-[90%] rounded-lg'}
+				>
+					<Markdown {plugins} md={response.message} />
+				</div>
+			</div>
+		{/each}
+	</div>
+	<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
+		<div class="flex flex-row justify-center items-center">
+			<input
+				class="w-[80%] p-2 border border-gray-300 rounded flex justify-center mx-auto my-5"
+				bind:value={inputText}
+				placeholder="Enter your input here"
+			/>
+
+			<button
+				class="mx-auto bg-blue-500 text-white p-2 rounded flex items-center justify-center"
+				on:click={callAiRequest}
+			>
+				Call AI Request
+			</button>
 		</div>
-	{/each}
+	</div>
 </div>
-
-<input bind:value={inputText} placeholder="Enter your input here" />
-
-<button on:click={callAiRequest}> Call AI Request </button>
-
-<style>
-	.message-container {
-		max-height: 100%; /* adjust as needed */
-		overflow-y: auto;
-	}
-
-	.user-message {
-		text-align: right;
-		background-color: #d1e7dd; /* light green */
-		color: black;
-		margin: 10px;
-		padding: 10px;
-		border-radius: 10px;
-	}
-
-	.ai-message {
-		text-align: left;
-		background-color: #d3d3d3; /* light gray */
-		color: black;
-		margin: 10px;
-		padding: 10px;
-		border-radius: 10px;
-	}
-</style>
