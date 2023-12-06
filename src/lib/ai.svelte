@@ -11,8 +11,10 @@
 	let apiResponses: { message: string; isUser: boolean }[] = [];
 
 	async function callAiRequest(): Promise<void> {
-		apiResponses = [...apiResponses, { message: inputText, isUser: true }];
-		const result = await invoke('async_command', { input: inputText });
+		const currentInput = inputText;
+		inputText = '';
+		apiResponses = [...apiResponses, { message: currentInput, isUser: true }];
+		const result = await invoke('async_command', { input: currentInput });
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 	}
 
@@ -24,14 +26,14 @@
 </script>
 
 <div class="h-full">
-	<div class="w-full mt-10 overflow-y-auto mb-20">
+	<div class="w-full flex flex-col mt-10 overflow-y-auto mb-20">
 		{#each apiResponses as response (response.message)}
-			<div class="mx-20 flex justify-{response.isUser ? 'end' : 'start'} m-2">
+			<div class="px-20 w-full flex justify-{response.isUser ? 'end' : 'start'} p-2">
 				<div
 					class:is-user={response.isUser}
 					class={response.isUser
-						? 'text-right bg-blue-500 text-white p-4 max-w-[90%] rounded-lg'
-						: 'text-left  bg-gray-300 text-black p-4 max-w-[90%] rounded-lg'}
+						? 'text-right bg-blue-500 text-white p-4 rounded-lg'
+						: 'text-left bg-gray-300 text-black p-4 rounded-lg'}
 				>
 					<Markdown {plugins} md={response.message} />
 				</div>
@@ -39,19 +41,24 @@
 		{/each}
 	</div>
 	<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
-		<div class="flex flex-row justify-center items-center">
-			<input
-				class="w-[80%] p-2 border border-gray-300 rounded flex justify-center mx-auto my-5"
-				bind:value={inputText}
-				placeholder="Enter your input here"
-			/>
-
-			<button
-				class="mx-auto bg-blue-500 text-white p-2 rounded flex items-center justify-center"
-				on:click={callAiRequest}
+		<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
+			<form
+				class="flex flex-row justify-center items-center"
+				on:submit|preventDefault={callAiRequest}
 			>
-				Call AI Request
-			</button>
+				<input
+					class="w-[80%] p-2 border border-gray-300 rounded flex justify-center mx-auto my-5"
+					bind:value={inputText}
+					placeholder="Enter your input here"
+				/>
+
+				<button
+					class="mx-auto bg-blue-500 text-white p-2 rounded flex items-center justify-center"
+					type="submit"
+				>
+					Call AI Request
+				</button>
+			</form>
 		</div>
 	</div>
 </div>
