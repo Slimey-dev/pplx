@@ -9,24 +9,14 @@ use std::sync::Mutex;
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
         .invoke_handler(tauri::generate_handler![async_command])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}!", name)
-}
-
-#[tauri::command]
-fn async_command(input: &str) -> Result<String, String> {
-    let runtime = tokio::runtime::Runtime::new().unwrap();
-    let result = runtime.block_on(async {
-        let result = ai_request(&input).await;
-        result
-    });
+async fn async_command(input: &str) -> Result<String, String> {
+    let result = ai_request(&input).await;
     result
 }
 
@@ -76,6 +66,8 @@ async fn ai_request(input: &str) -> Result<String, String> {
         "presence_penalty": 0,
         "frequency_penalty": 1
     });
+
+    println!("Payload: {:?}", payload);
 
     println!("Sending request...");
 
