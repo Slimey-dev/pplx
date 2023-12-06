@@ -28,7 +28,7 @@
 <div class="h-full">
 	<div class="w-full flex flex-col mt-10 overflow-y-auto mb-20">
 		{#each apiResponses as response (response.message)}
-			<div class="px-20 w-full flex justify-{response.isUser ? 'end' : 'start'} p-2">
+			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
 				<div
 					class:is-user={response.isUser}
 					class={response.isUser
