@@ -1,4 +1,4 @@
-# Tauri Chat App
+# PPLX CHAT APP
 
 This is a local chat application built with Tauri and the PPLX API.
 
