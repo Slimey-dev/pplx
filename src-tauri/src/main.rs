@@ -1,10 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use dotenv::dotenv;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{self, json};
 use std::collections::HashMap;
+use std::env;
 use std::sync::Mutex;
 use tauri::{generate_context, Manager};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
@@ -72,6 +74,9 @@ lazy_static! {
 }
 
 async fn ai_request(input: &str) -> Result<String, String> {
+  dotenv().ok();
+  let pplx_key = env::var("PPLX_API_KEY").expect("API_KEY must be set");
+
   let client = reqwest::Client::new();
 
   {
@@ -123,10 +128,7 @@ async fn ai_request(input: &str) -> Result<String, String> {
     .post("https://api.perplexity.ai/chat/completions")
     .header(ACCEPT, "application/json")
     .header(CONTENT_TYPE, "application/json")
-    .header(
-      AUTHORIZATION,
-      "Bearer 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",
-    )
+    .header(AUTHORIZATION, format!("Bearer {}", pplx_key))
     .body(payload.to_string())
     .send()
     .await;
