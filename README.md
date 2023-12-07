@@ -1,38 +1,28 @@
-# create-svelte
+# Tauri Chat App
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This is a local chat application built with Tauri and the PPLX API.
 
-## Creating a project
+## Description
 
-If you're seeing this, you've probably already done this step. Congrats!
+This application allows users to chat locally on their machine. It uses the PPLX API to facilitate the chat functionality and is built with Tauri, a framework for building lightweight, secure, and cross-platform desktop applications with web technologies.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Installation
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+To install the application, follow these steps:
 
-## Developing
+1. Clone the repository: `git clone https://github.com/Slimey-dev/pplx`
+2. Install the dependencies: `pnpm i`
+3. Create .env inside the root directory and add the following: `PPLX_API_KEY=YOUR_API_KEY`
+4. Build the application: `pnpm tauri build`
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Usage
 
-```bash
-npm run dev
+After building the application, you can run it locally on your machine. Enter a message into the chat input and press enter to send it.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Contributing
 
-## Building
+Contributions are welcome. Please open an issue or submit a pull request.
 
-To create a production version of your app:
+## License
 
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+[MIT](https://choosealicense.com/licenses/mit/)
