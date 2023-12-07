@@ -25,7 +25,9 @@
 	];
 </script>
 
-<div class="h-full">
+<div class="m-0 p-0 h-full w-full relative">
+	<button class="absolute -top-6 right-4 z-20"><img src="/gear-six.svg" alt="settings" /></button>
+	<div class="absolute top-0 left-0 w-full h-full z-10"></div>
 	<div class="w-full flex flex-col mt-10 overflow-y-auto mb-20">
 		{#each apiResponses as response (response.message)}
 			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
