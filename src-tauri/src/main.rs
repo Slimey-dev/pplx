@@ -6,21 +6,28 @@ use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{self, json};
 use std::collections::HashMap;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{generate_context, Manager};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
 fn main() {
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-  let hide = CustomMenuItem::new("hide".to_string(), "Hide");
+  let show = CustomMenuItem::new("show".to_string(), "Show");
 
   let tray_menu = SystemTrayMenu::new()
-    .add_item(hide)
+    .add_item(show)
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(quit);
 
   let tray = SystemTray::new().with_menu(tray_menu);
 
   tauri::Builder::default()
+    .on_window_event(|event| match event.event() {
+      tauri::WindowEvent::CloseRequested { api, .. } => {
+        event.window().hide().unwrap();
+        api.prevent_close();
+      }
+      _ => {}
+    })
     .invoke_handler(tauri::generate_handler![async_command])
     .system_tray(tray)
     .on_system_tray_event(|app, event| match event {
@@ -28,16 +35,30 @@ fn main() {
         "quit" => {
           std::process::exit(0);
         }
-        "hide" => {
+        "show" => {
           let window = app.get_window("main").unwrap();
-          window.hide().unwrap();
+          window.show().unwrap();
         }
         _ => {}
       },
+      SystemTrayEvent::DoubleClick {
+        position: _,
+        size: _,
+        ..
+      } => {
+        let window = app.get_window("main").unwrap();
+        window.show().unwrap();
+      }
       _ => {}
     })
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .build(generate_context!())
+    .expect("error while running tauri application")
+    .run(|_app_handle, event| match event {
+      tauri::RunEvent::ExitRequested { api, .. } => {
+        api.prevent_exit();
+      }
+      _ => {}
+    });
 }
 
 #[tauri::command]
