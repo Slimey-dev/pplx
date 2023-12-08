@@ -10,7 +10,9 @@
 
 	let inputText = '';
 	let apiResponses: { message: string; isUser: boolean }[] = [];
-	let someSetting = false;
+	let exitOnClose = false;
+	let modelSelection = '';
+	let showSettings = false;
 
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;
@@ -28,10 +30,15 @@
 </script>
 
 <div class="m-0 p-0 h-full w-full relative">
-	<button class="absolute -top-6 right-4 z-20"><img src="/gear-six.svg" alt="settings" /></button>
-	<div class="absolute top-0 left-0 w-full h-full z-10">
-		<Switch bind:checked={someSetting}></Switch>
-	</div>
+	<button class="absolute -top-6 right-4 z-20" on:click={() => (showSettings = !showSettings)}
+		><img src="/gear-six.svg" alt="settings" /></button
+	>
+	{#if showSettings}
+		<div class="absolute top-0 left-0 w-full h-full z-10 bg-white">
+			<Switch bind:checked={exitOnClose}></Switch>
+		</div>
+	{/if}
+
 	<div class="w-full flex flex-col mt-10 overflow-y-auto mb-20">
 		{#each apiResponses as response (response.message)}
 			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
@@ -46,7 +53,8 @@
 			</div>
 		{/each}
 	</div>
-	<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
+
+	{#if !showSettings}
 		<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
 			<form
 				class="flex flex-row justify-center items-center"
@@ -59,12 +67,12 @@
 				/>
 
 				<button
-					class="mx-auto bg-blue-500 text-white p-2 rounded flex items-center justify-center"
+					class="mx-auto bg-blue-500 text-white p-2 rounded flex z-0 items-center justify-center"
 					type="submit"
 				>
 					Call AI Request
 				</button>
 			</form>
 		</div>
-	</div>
+	{/if}
 </div>
