@@ -6,6 +6,14 @@
 	import rehypeHighlight from 'rehype-highlight';
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown from 'svelte-exmarkdown';
+	import {
+		Button,
+		Dropdown,
+		DropdownItem,
+		DropdownMenu,
+		DropdownToggle,
+		Styles
+	} from 'sveltestrap';
 	import Switch from '../component/Switch.svelte';
 
 	let inputText = '';
@@ -13,6 +21,14 @@
 	let exitOnClose = false;
 	let modelSelection = '';
 	let showSettings = false;
+	let modelList: string[] = [
+		'pplx-70b-chat',
+		'pplx-7b-online',
+		'pplx-70b-online',
+		'mistral-7b-instruct',
+		'codellama-34b-instruct',
+		'llama-2-70b-chat'
+	];
 
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;
@@ -29,13 +45,27 @@
 	];
 </script>
 
+<Styles />
+
 <div class="m-0 p-0 h-full w-full relative">
 	<button class="absolute -top-6 right-4 z-20" on:click={() => (showSettings = !showSettings)}
 		><img src="/gear-six.svg" alt="settings" /></button
 	>
 	{#if showSettings}
 		<div class="absolute top-0 left-0 w-full h-full z-10 bg-white">
-			<Switch bind:checked={exitOnClose}></Switch>
+			<div class="flex flex-col justify-center items-center pt-48">
+				<Switch bind:checked={exitOnClose}></Switch>
+				<Dropdown>
+					<DropdownToggle caret>Menu</DropdownToggle>
+					<DropdownMenu>
+						<DropdownItem>pplx-7b-chat</DropdownItem>
+						{#each modelList as model}
+							<DropdownItem divider />
+							<DropdownItem>{model}</DropdownItem>
+						{/each}
+					</DropdownMenu>
+				</Dropdown>
+			</div>
 		</div>
 	{/if}
 
@@ -55,9 +85,9 @@
 	</div>
 
 	{#if !showSettings}
-		<div class="fixed bottom-0 left-0 w-full bg-white shadow-lg shadow-black">
+		<div class="fixed bottom-0 left-0 w-full h-1/12 bg-white shadow-lg shadow-black">
 			<form
-				class="flex flex-row justify-center items-center"
+				class="flex flex-row justify-center items-center m-0 p-0 h-24 w-full"
 				on:submit|preventDefault={callAiRequest}
 			>
 				<input
