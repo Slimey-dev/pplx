@@ -29,6 +29,7 @@
 		'codellama-34b-instruct',
 		'llama-2-70b-chat'
 	];
+	let selectedModel = 'pplx-7b-chat';
 
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;
@@ -58,10 +59,20 @@
 				<Dropdown>
 					<DropdownToggle caret>Menu</DropdownToggle>
 					<DropdownMenu>
-						<DropdownItem>pplx-7b-chat</DropdownItem>
+						<DropdownItem
+							on:click={() => {
+								selectedModel = 'pplx-7b-chat';
+								console.log(selectedModel);
+							}}>pplx-7b-chat</DropdownItem
+						>
 						{#each modelList as model}
 							<DropdownItem divider />
-							<DropdownItem>{model}</DropdownItem>
+							<DropdownItem
+								on:click={() => {
+									selectedModel = model;
+									console.log(selectedModel);
+								}}>{model}</DropdownItem
+							>
 						{/each}
 					</DropdownMenu>
 				</Dropdown>
