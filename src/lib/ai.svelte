@@ -30,13 +30,24 @@
 		'llama-2-70b-chat'
 	];
 	let selectedModel = 'pplx-7b-chat';
+	let deleteChatHistory = false;
 
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;
 		inputText = '';
 		apiResponses = [...apiResponses, { message: currentInput, isUser: true }];
-		const result = await invoke('async_command', { input: currentInput });
+		const result = await invoke('async_command', {
+			selectedModel: selectedModel,
+			input: currentInput,
+			deleteChatHistory: deleteChatHistory
+		});
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
+		deleteChatHistory = false;
+	}
+
+	function deleteHistory(): void {
+		apiResponses = [];
+		deleteChatHistory = true;
 	}
 
 	const plugins: Plugin[] = [
@@ -49,13 +60,19 @@
 <Styles />
 
 <div class="m-0 p-0 h-full w-full relative">
-	<button class="absolute -top-6 right-4 z-20" on:click={() => (showSettings = !showSettings)}
+	<button class="fixed top-4 right-4 z-20" on:click={() => (showSettings = !showSettings)}
 		><img src="/gear-six.svg" alt="settings" /></button
+	>
+	<button class="fixed top-4 left-4 z-20" on:click={() => deleteHistory()}
+		><img src="/trash.svg" alt="trash" /></button
 	>
 	{#if showSettings}
 		<div class="absolute top-0 left-0 w-full h-full z-10 bg-white">
-			<div class="flex flex-col justify-center items-center pt-48">
-				<Switch bind:checked={exitOnClose}></Switch>
+			<div class="flex flex-row mx-auto justify-center gap-20 items-center pt-20">
+				<div class="flex flex-col justify-center items-center gap-3">
+					<span>Exit on Close</span>
+					<Switch bind:checked={exitOnClose}></Switch>
+				</div>
 				<Dropdown>
 					<DropdownToggle caret>Menu</DropdownToggle>
 					<DropdownMenu>
@@ -80,14 +97,14 @@
 		</div>
 	{/if}
 
-	<div class="w-full flex flex-col mt-10 overflow-y-auto mb-20">
+	<div class="w-full flex flex-col mt-10 px-14 overflow-y-auto mb-20">
 		{#each apiResponses as response (response.message)}
 			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
 				<div
 					class:is-user={response.isUser}
 					class={response.isUser
-						? 'text-right bg-blue-500 text-white p-4 rounded-lg'
-						: 'text-left bg-gray-300 text-black p-4 rounded-lg'}
+						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 justify-center items-center rounded-lg'
+						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 justify-center items-center rounded-lg'}
 				>
 					<Markdown {plugins} md={response.message} />
 				</div>

@@ -5,7 +5,7 @@ use dotenv::dotenv;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{self, json};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 use std::sync::Mutex;
 use tauri::{generate_context, Manager};
@@ -64,16 +64,25 @@ fn main() {
 }
 
 #[tauri::command]
-async fn async_command(input: &str) -> Result<String, String> {
-  let result = ai_request(&input).await;
+async fn async_command(
+  selected_model: &str,
+  input: &str,
+  delete_chat_history: bool,
+) -> Result<String, String> {
+  print!("Selected model: {}", selected_model);
+  let result = ai_request(&selected_model, &input, delete_chat_history).await;
   result
 }
 
 lazy_static! {
-  static ref CHAT_HISTORY: Mutex<Vec<HashMap<&'static str, String>>> = Mutex::new(Vec::new());
+  static ref CHAT_HISTORY: Mutex<Vec<BTreeMap<&'static str, String>>> = Mutex::new(Vec::new());
 }
 
-async fn ai_request(input: &str) -> Result<String, String> {
+async fn ai_request(
+  selected_model: &str,
+  input: &str,
+  delete_chat_history: bool,
+) -> Result<String, String> {
   dotenv().ok();
   let pplx_key = env::var("PPLX_API_KEY").expect("API_KEY must be set");
 
@@ -81,8 +90,13 @@ async fn ai_request(input: &str) -> Result<String, String> {
 
   {
     let mut chat_history = CHAT_HISTORY.lock().unwrap();
+
+    if delete_chat_history {
+      chat_history.clear();
+    }
+
     if chat_history.is_empty() {
-      let mut system_msg_map: HashMap<&'static str, String> = HashMap::new();
+      let mut system_msg_map: BTreeMap<&'static str, String> = BTreeMap::new();
       system_msg_map.insert("role", "system".to_string());
       system_msg_map.insert(
         "content",
@@ -94,7 +108,7 @@ async fn ai_request(input: &str) -> Result<String, String> {
 
     let new_message = input.to_string();
 
-    let mut new_msg_map: HashMap<&'static str, String> = HashMap::new();
+    let mut new_msg_map: BTreeMap<&'static str, String> = BTreeMap::new();
     new_msg_map.insert("role", "user".to_string());
     new_msg_map.insert("content", new_message);
 
@@ -109,7 +123,7 @@ async fn ai_request(input: &str) -> Result<String, String> {
   let messages: Vec<serde_json::Value> = serde_json::from_str(&chat_history_json).unwrap();
 
   let payload = json!({
-      "model": "pplx-7b-chat",
+      "model": selected_model,
       "messages": messages,
       "max_tokens": 0,
       "temperature": 1,
@@ -162,7 +176,7 @@ async fn ai_request(input: &str) -> Result<String, String> {
   {
     let mut chat_history = CHAT_HISTORY.lock().unwrap();
 
-    let mut assistant_msg_map: HashMap<&'static str, String> = HashMap::new();
+    let mut assistant_msg_map: BTreeMap<&'static str, String> = BTreeMap::new();
     assistant_msg_map.insert("role", "assistant".to_string());
     assistant_msg_map.insert("content", message.to_string());
 
