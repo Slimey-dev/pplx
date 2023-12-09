@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
+	import python from 'highlight.js/lib/languages/python';
 	import rust from 'highlight.js/lib/languages/rust';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import 'highlight.js/styles/github.css';
@@ -58,7 +59,10 @@
 
 	const plugins: Plugin[] = [
 		{
-			rehypePlugin: [rehypeHighlight, { ignoreMissing: true, languages: { typescript, rust } }]
+			rehypePlugin: [
+				rehypeHighlight,
+				{ ignoreMissing: true, languages: { typescript, rust, python } }
+			]
 		}
 	];
 </script>
@@ -109,8 +113,8 @@
 				<div
 					class:is-user={response.isUser}
 					class={response.isUser
-						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 justify-center items-center rounded-lg'
-						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 justify-center items-center rounded-lg'}
+						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 items-center rounded-lg'
+						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 rounded-lg'}
 				>
 					<Markdown {plugins} md={response.message} />
 				</div>
