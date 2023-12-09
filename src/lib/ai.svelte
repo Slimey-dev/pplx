@@ -19,7 +19,6 @@
 	let inputText = '';
 	let apiResponses: { message: string; isUser: boolean }[] = [];
 	let exitOnClose = false;
-	let modelSelection = '';
 	let showSettings = false;
 	let modelList: string[] = [
 		'pplx-70b-chat',
