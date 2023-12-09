@@ -18,7 +18,6 @@
 
 	let inputText = '';
 	let apiResponses: { message: string; isUser: boolean }[] = [];
-	let exitOnClose = false;
 	let showSettings = false;
 	let modelList: string[] = [
 		'pplx-70b-chat',
@@ -30,6 +29,14 @@
 	];
 	let selectedModel = 'pplx-7b-chat';
 	let deleteChatHistory = false;
+	let exitOnClose = false;
+
+	$: {
+		invoke('set_prevent_exit', { value: exitOnClose })
+			.then(() => console.log('set_prevent_exit command invoked successfully'))
+			.catch((error) => console.error('Failed to invoke set_prevent_exit command:', error));
+		console.log('exitOnClose', exitOnClose);
+	}
 
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;

@@ -11,6 +11,18 @@ use std::sync::Mutex;
 use tauri::{generate_context, Manager};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
+lazy_static! {
+  static ref PREVENT_EXIT: Mutex<bool> = Mutex::new(false);
+}
+
+#[tauri::command]
+async fn set_prevent_exit(value: bool) {
+  println!("set_prevent_exit called");
+  let mut prevent_exit = PREVENT_EXIT.lock().unwrap();
+  *prevent_exit = !value;
+  print!("Prevent exit: {}", *prevent_exit);
+}
+
 fn main() {
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
   let show = CustomMenuItem::new("show".to_string(), "Show");
@@ -25,12 +37,15 @@ fn main() {
   tauri::Builder::default()
     .on_window_event(|event| match event.event() {
       tauri::WindowEvent::CloseRequested { api, .. } => {
-        event.window().hide().unwrap();
-        api.prevent_close();
+        let prevent_exit = PREVENT_EXIT.lock().unwrap();
+        if *prevent_exit {
+          event.window().hide().unwrap();
+          api.prevent_close();
+        }
       }
       _ => {}
     })
-    .invoke_handler(tauri::generate_handler![async_command])
+    .invoke_handler(tauri::generate_handler![async_command, set_prevent_exit])
     .system_tray(tray)
     .on_system_tray_event(|app, event| match event {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
@@ -57,7 +72,10 @@ fn main() {
     .expect("error while running tauri application")
     .run(|_app_handle, event| match event {
       tauri::RunEvent::ExitRequested { api, .. } => {
-        api.prevent_exit();
+        let prevent_exit = PREVENT_EXIT.lock().unwrap();
+        if *prevent_exit {
+          api.prevent_exit();
+        }
       }
       _ => {}
     });
