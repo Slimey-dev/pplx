@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { CaretDown } from '@steeze-ui/phosphor-icons';
+	import { Icon } from '@steeze-ui/svelte-icon';
 	import { invoke } from '@tauri-apps/api/tauri';
 	import python from 'highlight.js/lib/languages/python';
 	import rust from 'highlight.js/lib/languages/rust';
@@ -84,7 +86,12 @@
 					<Switch bind:checked={exitOnClose}></Switch>
 				</div>
 				<Dropdown>
-					<DropdownToggle caret>Menu</DropdownToggle>
+					<DropdownToggle class="w-60 flex flex-row items-center justify-center">
+						<div class="w-full m-0 flex flex-row items-center justify-between">
+							<div class="">{selectedModel}</div>
+							<Icon src={CaretDown} size="24" />
+						</div>
+					</DropdownToggle>
 					<DropdownMenu>
 						<DropdownItem
 							on:click={() => {

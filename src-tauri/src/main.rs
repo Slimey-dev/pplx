@@ -11,18 +11,6 @@ use std::sync::Mutex;
 use tauri::{generate_context, Manager};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
-lazy_static! {
-  static ref PREVENT_EXIT: Mutex<bool> = Mutex::new(false);
-}
-
-#[tauri::command]
-async fn set_prevent_exit(value: bool) {
-  println!("set_prevent_exit called");
-  let mut prevent_exit = PREVENT_EXIT.lock().unwrap();
-  *prevent_exit = !value;
-  print!("Prevent exit: {}", *prevent_exit);
-}
-
 fn main() {
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
   let show = CustomMenuItem::new("show".to_string(), "Show");
@@ -81,6 +69,22 @@ fn main() {
     });
 }
 
+lazy_static! {
+  static ref CHAT_HISTORY: Mutex<Vec<BTreeMap<&'static str, String>>> = Mutex::new(Vec::new());
+}
+
+lazy_static! {
+  static ref PREVENT_EXIT: Mutex<bool> = Mutex::new(false);
+}
+
+#[tauri::command]
+async fn set_prevent_exit(value: bool) {
+  println!("set_prevent_exit called");
+  let mut prevent_exit = PREVENT_EXIT.lock().unwrap();
+  *prevent_exit = !value;
+  print!("Prevent exit: {}", *prevent_exit);
+}
+
 #[tauri::command]
 async fn async_command(
   selected_model: &str,
@@ -90,10 +94,6 @@ async fn async_command(
   print!("Selected model: {}", selected_model);
   let result = ai_request(&selected_model, &input, delete_chat_history).await;
   result
-}
-
-lazy_static! {
-  static ref CHAT_HISTORY: Mutex<Vec<BTreeMap<&'static str, String>>> = Mutex::new(Vec::new());
 }
 
 async fn ai_request(
