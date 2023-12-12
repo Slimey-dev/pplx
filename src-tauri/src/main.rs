@@ -4,12 +4,21 @@
 use dotenv::dotenv;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use serde::{Deserialize, Serialize};
 use serde_json::{self, json};
 use std::collections::BTreeMap;
 use std::env;
+use std::fs;
+use std::io::prelude::*;
 use std::sync::Mutex;
 use tauri::{generate_context, Manager};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+  model: String,
+  prevent_exit: bool,
+}
 
 fn main() {
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
@@ -33,7 +42,11 @@ fn main() {
       }
       _ => {}
     })
-    .invoke_handler(tauri::generate_handler![async_command, set_prevent_exit])
+    .invoke_handler(tauri::generate_handler![
+      async_command,
+      set_prevent_exit,
+      async_config_loader
+    ])
     .system_tray(tray)
     .on_system_tray_event(|app, event| match event {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
@@ -75,6 +88,40 @@ lazy_static! {
 
 lazy_static! {
   static ref PREVENT_EXIT: Mutex<bool> = Mutex::new(false);
+}
+
+#[tauri::command]
+async fn async_config_loader(model: &str, prevent_exit: bool) -> Result<String, String> {
+  let config = config_loader(model, prevent_exit)
+    .await
+    .map_err(|e| e.to_string())?;
+  let config_json = serde_json::to_string(&config).map_err(|e| e.to_string())?;
+  Ok(config_json)
+}
+
+async fn config_loader(
+  model: &str,
+  prevent_exit: bool,
+) -> Result<Config, Box<dyn std::error::Error>> {
+  let config_path = "config.json";
+  let config: Config;
+
+  if fs::metadata(config_path).is_ok() {
+    // Config file exists, load it
+    let config_json = fs::read_to_string(config_path)?;
+    config = serde_json::from_str(&config_json)?;
+  } else {
+    // Config file doesn't exist, create it
+    config = Config {
+      model: model.to_string(),
+      prevent_exit,
+    };
+    let config_json = serde_json::to_string(&config)?;
+    let mut file = fs::File::create(config_path)?;
+    file.write_all(config_json.as_bytes())?;
+  }
+
+  Ok(config)
 }
 
 #[tauri::command]
