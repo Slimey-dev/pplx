@@ -45,7 +45,8 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
       async_command,
       set_prevent_exit,
-      async_config_loader
+      async_config_loader,
+      async_config_saver
     ])
     .system_tray(tray)
     .on_system_tray_event(|app, event| match event {
@@ -99,6 +100,14 @@ async fn async_config_loader(model: &str, prevent_exit: bool) -> Result<String, 
   Ok(config_json)
 }
 
+#[tauri::command]
+async fn async_config_saver(model: &str, prevent_exit: bool) -> Result<(), String> {
+  config_saver(model, prevent_exit)
+    .await
+    .map_err(|e| e.to_string())?;
+  Ok(())
+}
+
 async fn config_loader(
   model: &str,
   prevent_exit: bool,
@@ -122,6 +131,17 @@ async fn config_loader(
   }
 
   Ok(config)
+}
+
+async fn config_saver(model: &str, prevent_exit: bool) -> Result<(), Box<dyn std::error::Error>> {
+  let config = Config {
+    model: model.to_string(),
+    prevent_exit,
+  };
+  let config_json = serde_json::to_string(&config)?;
+  let mut file = fs::File::create("config.json")?;
+  file.write_all(config_json.as_bytes())?;
+  Ok(())
 }
 
 #[tauri::command]
