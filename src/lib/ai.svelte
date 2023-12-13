@@ -9,14 +9,7 @@
 	import rehypeHighlight from 'rehype-highlight';
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown from 'svelte-exmarkdown';
-	import {
-		Button,
-		Dropdown,
-		DropdownItem,
-		DropdownMenu,
-		DropdownToggle,
-		Styles
-	} from 'sveltestrap';
+	import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Styles } from 'sveltestrap';
 	import Switch from '../component/Switch.svelte';
 
 	let inputText = '';
@@ -33,6 +26,11 @@
 	let selectedModel = 'pplx-7b-chat';
 	let deleteChatHistory = false;
 	let exitOnClose = false;
+
+	interface Config {
+		model: string;
+		preventExit: boolean;
+	}
 
 	$: {
 		invoke('set_prevent_exit', { value: exitOnClose })
@@ -52,6 +50,25 @@
 		});
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 		deleteChatHistory = false;
+	}
+
+	async function configLoader(): Promise<void> {
+		const loadConfig = await invoke('async_config_loader', {
+			model: selectedModel,
+			preventExit: exitOnClose
+		});
+		const loadedConfig = JSON.parse(loadConfig as string) as Config;
+		selectedModel = loadedConfig.model;
+		exitOnClose = loadedConfig.preventExit;
+		console.log(loadConfig);
+	}
+	configLoader();
+
+	async function configSaver(): Promise<void> {
+		await invoke('async_config_saver', {
+			model: selectedModel,
+			preventExit: exitOnClose
+		});
 	}
 
 	function deleteHistory(): void {
@@ -111,6 +128,7 @@
 					</DropdownMenu>
 				</Dropdown>
 			</div>
+			<button on:click={() => configSaver()}>Save Config</button>
 		</div>
 	{/if}
 

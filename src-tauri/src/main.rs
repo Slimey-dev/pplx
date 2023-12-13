@@ -102,9 +102,11 @@ async fn async_config_loader(model: &str, prevent_exit: bool) -> Result<String, 
 
 #[tauri::command]
 async fn async_config_saver(model: &str, prevent_exit: bool) -> Result<(), String> {
+  print!("Saving config...");
   config_saver(model, prevent_exit)
     .await
     .map_err(|e| e.to_string())?;
+  print!("Config saved.");
   Ok(())
 }
 
@@ -140,6 +142,7 @@ async fn config_saver(model: &str, prevent_exit: bool) -> Result<(), Box<dyn std
   };
   let config_json = serde_json::to_string(&config)?;
   let mut file = fs::File::create("config.json")?;
+  print!("Saving config: {}", config_json);
   file.write_all(config_json.as_bytes())?;
   Ok(())
 }
