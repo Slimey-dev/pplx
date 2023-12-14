@@ -132,6 +132,9 @@ async fn config_loader(
     file.write_all(config_json.as_bytes())?;
   }
 
+  let mut prevent_exit_lock = PREVENT_EXIT.lock().unwrap();
+  *prevent_exit_lock = config.prevent_exit;
+
   Ok(config)
 }
 

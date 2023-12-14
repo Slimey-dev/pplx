@@ -32,13 +32,6 @@
 		preventExit: boolean;
 	}
 
-	$: {
-		invoke('set_prevent_exit', { value: exitOnClose })
-			.then(() => console.log('set_prevent_exit command invoked successfully'))
-			.catch((error) => console.error('Failed to invoke set_prevent_exit command:', error));
-		console.log('exitOnClose', exitOnClose);
-	}
-
 	async function callAiRequest(): Promise<void> {
 		const currentInput = inputText;
 		inputText = '';
@@ -84,6 +77,13 @@
 			]
 		}
 	];
+
+	$: {
+		invoke('set_prevent_exit', { value: exitOnClose })
+			.then(() => console.log('set_prevent_exit command invoked successfully'))
+			.catch((error) => console.error('Failed to invoke set_prevent_exit command:', error));
+		console.log('exitOnClose', exitOnClose);
+	}
 </script>
 
 <Styles />
