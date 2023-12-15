@@ -10,7 +10,6 @@
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown from 'svelte-exmarkdown';
 	import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Styles } from 'sveltestrap';
-	import Switch from '../component/Switch.svelte';
 
 	let inputText = '';
 	let apiResponses: { message: string; isUser: boolean }[] = [];
@@ -29,7 +28,7 @@
 
 	interface Config {
 		model: string;
-		preventExit: boolean;
+		prevent_exit: boolean;
 	}
 
 	async function callAiRequest(): Promise<void> {
@@ -52,8 +51,7 @@
 		});
 		const loadedConfig = JSON.parse(loadConfig as string) as Config;
 		selectedModel = loadedConfig.model;
-		exitOnClose = loadedConfig.preventExit;
-		console.log(loadConfig);
+		exitOnClose = loadedConfig.prevent_exit;
 	}
 	configLoader();
 
@@ -79,7 +77,7 @@
 	];
 
 	$: {
-		invoke('set_prevent_exit', { value: exitOnClose })
+		invoke('set_prevent_exit', { setPreventExit: exitOnClose })
 			.then(() => console.log('set_prevent_exit command invoked successfully'))
 			.catch((error) => console.error('Failed to invoke set_prevent_exit command:', error));
 		console.log('exitOnClose', exitOnClose);
@@ -100,7 +98,11 @@
 			<div class="flex flex-row mx-auto justify-center gap-20 items-center pt-20">
 				<div class="flex flex-col justify-center items-center gap-3">
 					<span>Exit on Close</span>
-					<Switch bind:checked={exitOnClose}></Switch>
+					<input
+						type="checkbox"
+						bind:checked={exitOnClose}
+						class="w-6 h-6 rounded-full border border-gray-300"
+					/>
 				</div>
 				<Dropdown>
 					<DropdownToggle class="w-60 flex flex-row items-center justify-center">

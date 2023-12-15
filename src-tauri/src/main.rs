@@ -151,10 +151,10 @@ async fn config_saver(model: &str, prevent_exit: bool) -> Result<(), Box<dyn std
 }
 
 #[tauri::command]
-async fn set_prevent_exit(value: bool) {
+async fn set_prevent_exit(set_prevent_exit: bool) {
   println!("set_prevent_exit called");
   let mut prevent_exit = PREVENT_EXIT.lock().unwrap();
-  *prevent_exit = !value;
+  *prevent_exit = !set_prevent_exit;
   print!("Prevent exit: {}", *prevent_exit);
 }
 
