@@ -12,7 +12,7 @@ To install the application, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/Slimey-dev/pplx`
 2. Install the dependencies: `pnpm i`
-3. Create .env inside the root directory and add the following: `PPLX_API_KEY=YOUR_API_KEY`
+3. Create .env inside the root directory and add the following: `echo PPLX_API_KEY=YOUR_API_KEY > .env`
 4. Build the application: `pnpm tauri build`
 
 ## Usage
