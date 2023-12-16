@@ -7,6 +7,7 @@
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import 'highlight.js/styles/github.css';
 	import rehypeHighlight from 'rehype-highlight';
+	import { onMount } from 'svelte';
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown from 'svelte-exmarkdown';
 	import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Styles } from 'sveltestrap';
@@ -82,66 +83,85 @@
 			.catch((error) => console.error('Failed to invoke set_prevent_exit command:', error));
 		console.log('exitOnClose', exitOnClose);
 	}
+
+	let codeBlocks;
+
+	onMount(() => {
+		codeBlocks = document.querySelectorAll('pre code');
+		codeBlocks.forEach((block) => {
+			const button = document.createElement('button');
+			button.textContent = 'Copy';
+			button.addEventListener('click', () => {
+				if (block.textContent) {
+					navigator.clipboard.writeText(block.textContent);
+				}
+			});
+			if (block.parentNode) {
+				block.parentNode.insertBefore(button, block);
+			}
+		});
+	});
 </script>
 
 <Styles />
 
-<div class="m-0 p-0 h-full w-full relative">
-	<button class="fixed top-4 right-4 z-20" on:click={() => (showSettings = !showSettings)}
+<div>
+	<button class="absolute top-5 right-5" on:click={() => (showSettings = !showSettings)}
 		><img src="/gear-six.svg" alt="settings" /></button
 	>
-	<button class="fixed top-4 left-4 z-20" on:click={() => deleteHistory()}
+	<button class="absolute top-5 left-5" on:click={() => deleteHistory()}
 		><img src="/trash.svg" alt="trash" /></button
 	>
 	{#if showSettings}
-		<div class="absolute top-0 left-0 w-full h-full z-10 bg-white">
-			<div class="flex flex-row mx-auto justify-center gap-20 items-center pt-20">
-				<div class="flex flex-col justify-center items-center gap-3">
-					<span>Exit on Close</span>
-					<input
-						type="checkbox"
-						bind:checked={exitOnClose}
-						class="w-6 h-6 rounded-full border border-gray-300"
-					/>
-				</div>
-				<Dropdown>
-					<DropdownToggle class="w-60 flex flex-row items-center justify-center">
-						<div class="w-full m-0 flex flex-row items-center justify-between">
-							<div class="">{selectedModel}</div>
-							<Icon src={CaretDown} size="24" />
-						</div>
-					</DropdownToggle>
-					<DropdownMenu>
-						<DropdownItem
-							on:click={() => {
-								selectedModel = 'pplx-7b-chat';
-								console.log(selectedModel);
-							}}>pplx-7b-chat</DropdownItem
-						>
-						{#each modelList as model}
-							<DropdownItem divider />
+		<div class="">
+			<div class="">
+				<div class="pt-20 pl-4 flex flex-col gap-3">
+					<div class="">
+						<input type="checkbox" bind:checked={exitOnClose} class="" />
+						<span>Exit on Close</span>
+					</div>
+					<Dropdown>
+						<DropdownToggle class="">
+							<div class="flex flex-row">
+								<div class="">{selectedModel}</div>
+								<Icon src={CaretDown} size="24" />
+							</div>
+						</DropdownToggle>
+						<DropdownMenu>
 							<DropdownItem
 								on:click={() => {
-									selectedModel = model;
+									selectedModel = 'pplx-7b-chat';
 									console.log(selectedModel);
-								}}>{model}</DropdownItem
+								}}>pplx-7b-chat</DropdownItem
 							>
-						{/each}
-					</DropdownMenu>
-				</Dropdown>
+							{#each modelList as model}
+								<DropdownItem divider />
+								<DropdownItem
+									on:click={() => {
+										selectedModel = model;
+										console.log(selectedModel);
+									}}>{model}</DropdownItem
+								>
+							{/each}
+						</DropdownMenu>
+					</Dropdown>
+				</div>
+				<button
+					class="absolute bottom-0 border-2 bg-gray-500 border-gray-500 py-2 text-white w-full"
+					on:click={() => configSaver()}>Save Config</button
+				>
 			</div>
-			<button on:click={() => configSaver()}>Save Config</button>
 		</div>
 	{/if}
 
-	<div class="w-full flex flex-col mt-10 px-14 overflow-y-auto mb-20">
+	<div class="pt-20 px-14 max-w-full pb-28">
 		{#each apiResponses as response (response.message)}
 			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
 				<div
 					class:is-user={response.isUser}
 					class={response.isUser
-						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 items-center rounded-lg'
-						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 rounded-lg'}
+						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 items-center rounded-lg prose'
+						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 rounded-lg prose'}
 				>
 					<Markdown {plugins} md={response.message} />
 				</div>

@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.hljs {
+	background: #1f2937 !important;
+	border-radius: 10px;
+	padding: 10px;
+	font-family: 'Courier New', Courier, monospace;
+	line-height: 1.6;
+	color: #d1d5db !important;
+}
+
+.hljs-literal,
+.hljs-name {
+	color: #6b7280 !important; /* Cool Gray */
+}
+
+.hljs-function,
+.hljs-title,
+.function_ {
+	color: #93c5fd !important; /* Light Blue */
+}
+
+.hljs-addition,
+.hljs-section {
+	color: #3b82f6 !important; /* Blue */
+}
+
+.hljs-symbol,
+.hljs-string,
+.hljs-link {
+	color: #fcd34d !important; /* Amber */
+}
+
+.hljs-comment,
+.hljs-quote {
+	color: #10b981 !important; /* Green */
+}
+
+.hljs-deletion,
+.hljs-variable {
+	color: #ef4444 !important; /* Red */
+}
+
+.hljs-addition,
+.hljs-title,
+.hljs-section {
+	color: #3b82f6 !important; /* Blue */
+}
+
+.hljs-punctuation {
+	color: #8badc1 !important;
+}
