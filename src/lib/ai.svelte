@@ -26,10 +26,12 @@
 	let selectedModel = 'pplx-7b-chat';
 	let deleteChatHistory = false;
 	let exitOnClose = false;
+	let apiKey = '';
 
 	interface Config {
 		model: string;
 		prevent_exit: boolean;
+		api_key: string;
 	}
 
 	async function callAiRequest(): Promise<void> {
@@ -39,7 +41,8 @@
 		const result = await invoke('async_command', {
 			selectedModel: selectedModel,
 			input: currentInput,
-			deleteChatHistory: deleteChatHistory
+			deleteChatHistory: deleteChatHistory,
+			apiKey: apiKey
 		});
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 		deleteChatHistory = false;
@@ -49,18 +52,21 @@
 	async function configLoader(): Promise<void> {
 		const loadConfig = await invoke('async_config_loader', {
 			model: selectedModel,
-			preventExit: exitOnClose
+			preventExit: exitOnClose,
+			apiKey: apiKey
 		});
 		const loadedConfig = JSON.parse(loadConfig as string) as Config;
 		selectedModel = loadedConfig.model;
 		exitOnClose = loadedConfig.prevent_exit;
+		apiKey = loadedConfig.api_key;
 	}
 	configLoader();
 
 	async function configSaver(): Promise<void> {
 		await invoke('async_config_saver', {
 			model: selectedModel,
-			preventExit: exitOnClose
+			preventExit: exitOnClose,
+			apiKey: apiKey
 		});
 	}
 
@@ -140,6 +146,9 @@
 		<div class="bg-white">
 			<div class="">
 				<div class="pt-20 pl-4 flex flex-col gap-3">
+					<div class="flex flex-row gap-3">
+						<input type="text" bind:value={apiKey} class="border-2 border-gray-500 p-2 w-[29rem]" />
+					</div>
 					<div class="">
 						<input type="checkbox" bind:checked={exitOnClose} class="" />
 						<span>Exit on Close</span>

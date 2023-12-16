@@ -1,7 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use dotenv::dotenv;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
@@ -18,6 +17,7 @@ use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemT
 struct Config {
   model: String,
   prevent_exit: bool,
+  api_key: String,
 }
 
 fn main() {
@@ -92,8 +92,12 @@ lazy_static! {
 }
 
 #[tauri::command]
-async fn async_config_loader(model: &str, prevent_exit: bool) -> Result<String, String> {
-  let config = config_loader(model, prevent_exit)
+async fn async_config_loader(
+  model: &str,
+  prevent_exit: bool,
+  api_key: &str,
+) -> Result<String, String> {
+  let config = config_loader(model, prevent_exit, api_key)
     .await
     .map_err(|e| e.to_string())?;
   let config_json = serde_json::to_string(&config).map_err(|e| e.to_string())?;
@@ -101,9 +105,9 @@ async fn async_config_loader(model: &str, prevent_exit: bool) -> Result<String, 
 }
 
 #[tauri::command]
-async fn async_config_saver(model: &str, prevent_exit: bool) -> Result<(), String> {
+async fn async_config_saver(model: &str, prevent_exit: bool, api_key: &str) -> Result<(), String> {
   print!("Saving config...");
-  config_saver(model, prevent_exit)
+  config_saver(model, prevent_exit, api_key)
     .await
     .map_err(|e| e.to_string())?;
   print!("Config saved.");
@@ -113,6 +117,7 @@ async fn async_config_saver(model: &str, prevent_exit: bool) -> Result<(), Strin
 async fn config_loader(
   model: &str,
   prevent_exit: bool,
+  api_key: &str,
 ) -> Result<Config, Box<dyn std::error::Error>> {
   let config_path = "config.json";
   let config: Config;
@@ -126,6 +131,7 @@ async fn config_loader(
     config = Config {
       model: model.to_string(),
       prevent_exit,
+      api_key: api_key.to_string(),
     };
     let config_json = serde_json::to_string(&config)?;
     let mut file = fs::File::create(config_path)?;
@@ -138,10 +144,15 @@ async fn config_loader(
   Ok(config)
 }
 
-async fn config_saver(model: &str, prevent_exit: bool) -> Result<(), Box<dyn std::error::Error>> {
+async fn config_saver(
+  model: &str,
+  prevent_exit: bool,
+  api_key: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
   let config = Config {
     model: model.to_string(),
     prevent_exit,
+    api_key: api_key.to_string(),
   };
   let config_json = serde_json::to_string(&config)?;
   let mut file = fs::File::create("config.json")?;
@@ -163,9 +174,10 @@ async fn async_command(
   selected_model: &str,
   input: &str,
   delete_chat_history: bool,
+  api_key: &str,
 ) -> Result<String, String> {
   print!("Selected model: {}", selected_model);
-  let result = ai_request(&selected_model, &input, delete_chat_history).await;
+  let result = ai_request(&selected_model, &input, delete_chat_history, api_key).await;
   result
 }
 
@@ -173,10 +185,8 @@ async fn ai_request(
   selected_model: &str,
   input: &str,
   delete_chat_history: bool,
+  api_key: &str,
 ) -> Result<String, String> {
-  dotenv().ok();
-  let pplx_key = env::var("PPLX_API_KEY").expect("API_KEY must be set");
-
   let client = reqwest::Client::new();
 
   {
@@ -233,7 +243,7 @@ async fn ai_request(
     .post("https://api.perplexity.ai/chat/completions")
     .header(ACCEPT, "application/json")
     .header(CONTENT_TYPE, "application/json")
-    .header(AUTHORIZATION, format!("Bearer {}", pplx_key))
+    .header(AUTHORIZATION, format!("Bearer {}", api_key))
     .body(payload.to_string())
     .send()
     .await;
