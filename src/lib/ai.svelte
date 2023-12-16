@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CaretDown } from '@steeze-ui/phosphor-icons';
+	import { CaretDown, ClipboardText } from '@steeze-ui/phosphor-icons';
 	import { Icon } from '@steeze-ui/svelte-icon';
 	import { invoke } from '@tauri-apps/api/tauri';
 	import python from 'highlight.js/lib/languages/python';
@@ -43,6 +43,7 @@
 		});
 		apiResponses = [...apiResponses, { message: result as string, isUser: false }];
 		deleteChatHistory = false;
+		highlightCode();
 	}
 
 	async function configLoader(): Promise<void> {
@@ -86,21 +87,44 @@
 
 	let codeBlocks;
 
-	onMount(() => {
-		codeBlocks = document.querySelectorAll('pre code');
-		codeBlocks.forEach((block) => {
-			const button = document.createElement('button');
-			button.textContent = 'Copy';
-			button.addEventListener('click', () => {
-				if (block.textContent) {
-					navigator.clipboard.writeText(block.textContent);
+	async function highlightCode(): Promise<void> {
+		console.log('Waiting for a second before running highlightCode');
+		await new Promise((resolve) => setTimeout(resolve, 1000));
+		console.log('highlightCode function called');
+		let preBlocks = document.querySelectorAll('pre');
+		console.log(`Found ${preBlocks.length} pre blocks`);
+		preBlocks.forEach((block, index) => {
+			console.log(`Processing block ${index + 1}`);
+			let button = document.createElement('button');
+			let icon = new Icon({
+				target: button,
+				props: {
+					src: ClipboardText,
+					size: '24'
 				}
 			});
+			button.classList.add('absolute', 'top-7', 'right-0', 'p-2', 'text-white');
+			button.addEventListener('click', () => {
+				let codeBlock = block.querySelector('code');
+				if (codeBlock && codeBlock.textContent) {
+					console.log('Copy button clicked, copying text to clipboard');
+					navigator.clipboard.writeText(codeBlock.textContent);
+				} else {
+					console.log('Copy button clicked, but block has no text content');
+				}
+			});
+			console.log('Inserting copy button into DOM');
+			const wrapper = document.createElement('div');
+			wrapper.style.position = 'relative';
 			if (block.parentNode) {
-				block.parentNode.insertBefore(button, block);
+				block.parentNode.replaceChild(wrapper, block);
+				wrapper.appendChild(block);
+				wrapper.appendChild(button);
+			} else {
+				console.log('Block has no parent node, cannot insert copy button');
 			}
 		});
-	});
+	}
 </script>
 
 <Styles />
@@ -113,7 +137,7 @@
 		><img src="/trash.svg" alt="trash" /></button
 	>
 	{#if showSettings}
-		<div class="">
+		<div class="bg-white">
 			<div class="">
 				<div class="pt-20 pl-4 flex flex-col gap-3">
 					<div class="">
@@ -147,47 +171,49 @@
 					</Dropdown>
 				</div>
 				<button
-					class="absolute bottom-0 border-2 bg-gray-500 border-gray-500 py-2 text-white w-full"
+					class="fixed bottom-0 border-2 bg-gray-500 border-gray-500 py-2 text-white w-full"
 					on:click={() => configSaver()}>Save Config</button
 				>
 			</div>
 		</div>
 	{/if}
 
-	<div class="pt-20 px-14 max-w-full pb-28">
-		{#each apiResponses as response (response.message)}
-			<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
-				<div
-					class:is-user={response.isUser}
-					class={response.isUser
-						? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-2 px-4 items-center rounded-lg prose'
-						: 'text-left flex flex-col bg-gray-300 text-black pt-4 pb-2 px-4 rounded-lg prose'}
-				>
-					<Markdown {plugins} md={response.message} />
-				</div>
-			</div>
-		{/each}
-	</div>
-
 	{#if !showSettings}
-		<div class="fixed bottom-0 left-0 w-full h-1/12 bg-white shadow-lg shadow-black">
-			<form
-				class="flex flex-row justify-center items-center m-0 p-0 h-24 w-full"
-				on:submit|preventDefault={callAiRequest}
-			>
-				<input
-					class="w-[80%] p-2 border border-gray-300 rounded flex justify-center mx-auto my-5"
-					bind:value={inputText}
-					placeholder="Enter your input here"
-				/>
-
-				<button
-					class="mx-auto bg-blue-500 text-white p-2 rounded flex z-0 items-center justify-center"
-					type="submit"
-				>
-					Call AI Request
-				</button>
-			</form>
+		<div class="pt-20 px-14 max-w-full pb-28">
+			{#each apiResponses as response (response.message)}
+				<div class="px-20 w-full flex {response.isUser ? 'justify-end' : 'justify-start'} p-2">
+					<div
+						class:is-user={response.isUser}
+						class={response.isUser
+							? 'text-right flex flex-col bg-blue-500 text-white pt-4 pb-4 px-4 items-center rounded-lg prose'
+							: 'text-left flex flex-col bg-gray-300 text-black pt-2 pb-2 px-4 rounded-lg prose'}
+					>
+						<Markdown {plugins} md={response.message} />
+					</div>
+				</div>
+			{/each}
 		</div>
+
+		{#if !showSettings}
+			<div class="fixed bottom-0 left-0 w-full h-1/12 bg-white shadow-lg shadow-black">
+				<form
+					class="flex flex-row justify-center items-center m-0 p-0 h-24 w-full"
+					on:submit|preventDefault={callAiRequest}
+				>
+					<input
+						class="w-[80%] p-2 border border-gray-300 rounded flex justify-center mx-auto my-5"
+						bind:value={inputText}
+						placeholder="Enter your input here"
+					/>
+
+					<button
+						class="mx-auto bg-blue-500 text-white p-2 rounded flex z-0 items-center justify-center"
+						type="submit"
+					>
+						Call AI Request
+					</button>
+				</form>
+			</div>
+		{/if}
 	{/if}
 </div>
