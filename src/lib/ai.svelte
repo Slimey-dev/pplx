@@ -147,7 +147,12 @@
 			<div class="">
 				<div class="pt-20 pl-4 flex flex-col gap-3">
 					<div class="flex flex-row gap-3">
-						<input type="text" bind:value={apiKey} class="border-2 border-gray-500 p-2 w-[29rem]" />
+						<input
+							placeholder="Your PPLX API key"
+							type="text"
+							bind:value={apiKey}
+							class="border-2 border-gray-500 p-2 w-[29rem]"
+						/>
 					</div>
 					<div class="">
 						<input type="checkbox" bind:checked={exitOnClose} class="" />
