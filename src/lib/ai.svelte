@@ -7,7 +7,6 @@
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import 'highlight.js/styles/github.css';
 	import rehypeHighlight from 'rehype-highlight';
-	import { onMount } from 'svelte';
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown from 'svelte-exmarkdown';
 	import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Styles } from 'sveltestrap';
