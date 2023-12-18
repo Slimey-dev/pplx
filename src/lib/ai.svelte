@@ -19,6 +19,7 @@
 		'pplx-7b-online',
 		'pplx-70b-online',
 		'mistral-7b-instruct',
+		'mixtral-8x7b-instruct',
 		'codellama-34b-instruct',
 		'llama-2-70b-chat'
 	];
